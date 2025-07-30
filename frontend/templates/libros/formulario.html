@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}{{ accion }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+        <div class="card shadow-sm">
+            <div class="card-header card-header-custom">
+                <h1 class="h3 mb-0 text-dark">{{ accion }}</h1>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="titulo" class="form-label">Título</label>
+                            <input type="text" class="form-control" id="titulo" name="titulo" value="{{ libro.titulo if libro else '' }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="autor" class="form-label">Autor</label>
+                            <input type="text" class="form-control" id="autor" name="autor" value="{{ libro.autor if libro else '' }}" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="editorial" class="form-label">Editorial</label>
+                            <input type="text" class="form-control" id="editorial" name="editorial" value="{{ libro.editorial if libro and libro.editorial else '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="genero_id" class="form-label">Género</label>
+                            <div class="input-group">
+                                <select class="form-select" id="genero_id" name="genero_id" required>
+                                    <option value="" {% if not libro %}selected{% endif %} disabled>-- Seleccione un género --</option>
+                                    {% for genero in generos %}
+                                        <option value="{{ genero.id }}" {% if libro and libro.genero_id == genero.id %}selected{% endif %}>
+                                            {{ genero.nombre }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <button class="btn btn-outline-success" type="button" data-bs-toggle="modal" data-bs-target="#addGenreModal" title="Agregar nuevo género">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="anaquel_id" class="form-label">Anaquel (Ubicación)</label>
+                            <select class="form-select" id="anaquel_id" name="anaquel_id">
+                                <option value="">-- Sin asignar --</option>
+                                {% for anaquel in anaqueles %}
+                                    <option value="{{ anaquel.id }}" {% if libro and libro.anaquel_id == anaquel.id %}selected{% endif %}>
+                                        {{ anaquel.nombre }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="isbn" class="form-label">ISBN (Opcional)</label>
+                            <input type="text" class="form-control" id="isbn" name="isbn" value="{{ libro.isbn if libro and libro.isbn else '' }}">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="total_ejemplares" class="form-label">Total de Ejemplares</label>
+                        <input type="number" class="form-control" id="total_ejemplares" name="total_ejemplares" value="{{ libro.total_ejemplares if libro else 1 }}" min="1" required>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-end">
+                        <a href="{{ url_for('listar_libros') }}" class="btn btn-secondary me-2">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">{{ 'Actualizar Libro' if libro else 'Guardar Libro' }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Agregar Nuevo Género -->
+<div class="modal fade" id="addGenreModal" tabindex="-1" aria-labelledby="addGenreModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addGenreModalLabel">Agregar Nuevo Género</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addGenreForm">
+                    <div class="mb-3">
+                        <label for="nombre_genero" class="form-label">Nombre del Nuevo Género:</label>
+                        <input type="text" class="form-control" id="nombre_genero" name="nombre_genero" required>
+                    </div>
+                    <div id="modal-alert" class="alert d-none" role="alert"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="saveGenreBtn">Guardar Género</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const saveGenreBtn = document.getElementById('saveGenreBtn');
+    if (saveGenreBtn) {
+        const addGenreForm = document.getElementById('addGenreForm');
+        const genreNameInput = document.getElementById('nombre_genero');
+        const genreSelect = document.getElementById('genero_id');
+        const modalAlert = document.getElementById('modal-alert');
+        const addGenreModal = new bootstrap.Modal(document.getElementById('addGenreModal'));
+
+        saveGenreBtn.addEventListener('click', async function() {
+            const formData = new FormData(addGenreForm);
+            modalAlert.classList.add('d-none');
+            modalAlert.textContent = '';
+
+            try {
+                const response = await fetch("{{ url_for('agregar_genero_api') }}", {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    genreSelect.innerHTML = '<option value="" selected disabled>-- Seleccione un género --</option>';
+                    result.generos.forEach(function(genero) {
+                        const option = new Option(genero.nombre, genero.id);
+                        genreSelect.add(option);
+                    });
+                    const nuevoGenero = result.generos.find(g => g.nombre === genreNameInput.value);
+                    if (nuevoGenero) {
+                        genreSelect.value = nuevoGenero.id;
+                    }
+                    addGenreModal.hide();
+                    genreNameInput.value = '';
+                } else {
+                    modalAlert.textContent = result.message || 'Ocurrió un error.';
+                    modalAlert.className = 'alert alert-danger';
+                }
+            } catch (error) {
+                modalAlert.textContent = 'Error de conexión con el servidor.';
+                modalAlert.className = 'alert alert-danger';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

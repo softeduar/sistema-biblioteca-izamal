@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Reporte de Libros Prestados{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header card-header-custom">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h1 class="h3 mb-2 mb-md-0 text-dark">Reporte de Libros Prestados</h1>
+            <a href="{{ url_for('generar_pdf_prestados') }}" class="btn btn-danger">
+                <i class="bi bi-file-earmark-pdf-fill me-2"></i>Descargar en PDF
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">Título del Libro</th>
+                        <th scope="col">Autor</th>
+                        <th scope="col">Prestado a</th>
+                        <th scope="col" class="text-center">Fecha de Préstamo</th>
+                        <th scope="col" class="text-center">Devolución Prevista</th>
+                        <th scope="col" class="text-center">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if libros_prestados %}
+                        {% for libro in libros_prestados %}
+                            {% set vencido = libro.estado == 'prestado' and libro.fecha_devolucion_prevista < today_date %}
+                            <tr class="{% if vencido or libro.estado == 'vencido' %}table-danger{% endif %}">
+                                <td>{{ libro.libro_titulo }}</td>
+                                <td>{{ libro.libro_autor }}</td>
+                                <td>{{ libro.nombre_prestatario }}</td>
+                                <td class="text-center">{{ libro.fecha_prestamo.strftime('%d/%m/%Y') if libro.fecha_prestamo else '' }}</td>
+                                <td class="text-center">{{ libro.fecha_devolucion_prevista.strftime('%d/%m/%Y') if libro.fecha_devolucion_prevista else '' }}</td>
+                                <td class="text-center">
+                                    <span class="badge rounded-pill 
+                                        {% if libro.estado == 'devuelto' %} bg-success
+                                        {% elif vencido or libro.estado == 'vencido' %} bg-danger
+                                        {% else %} bg-primary
+                                        {% endif %}">
+                                        {{ 'Vencido' if vencido and libro.estado == 'prestado' else libro.estado|capitalize }}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6">
+                                <div class="alert alert-info text-center mb-0">
+                                    Actualmente, no hay libros prestados.
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

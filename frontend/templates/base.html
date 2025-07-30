@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es" class="h-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema de Biblioteca{% endblock %} - H. Ayuntamiento de Izamal</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --color-guinda: #9A1B1F;
+            --color-verde: #006341;
+            --color-gris-oscuro: #343A40;
+            --color-gris-claro: #E9ECEF;
+            --color-amarillo: #FFD600;
+            --color-blanco: #FFFFFF;
+            --color-negro: #212529;
+            --color-azul: #004B8D;
+        }
+
+        .btn-primary {
+            background-color: var(--color-guinda);
+            border-color: var(--color-guinda);
+        }
+        .btn-primary:hover {
+            background-color: #7a1519; 
+            border-color: #7a1519;
+        }
+        .btn-success {
+            background-color: var(--color-verde);
+            border-color: var(--color-verde);
+        }
+        .btn-info {
+            background-color: var(--color-azul);
+            border-color: var(--color-azul);
+        }
+        .text-primary { color: var(--color-guinda) !important; }
+        .alert-success { background-color: var(--color-verde); color: var(--color-blanco); }
+        .alert-warning { background-color: var(--color-amarillo); color: var(--color-negro); }
+        .alert-danger { background-color: var(--color-guinda); color: var(--color-blanco); }
+        .alert-info { background-color: var(--color-azul); color: var(--color-blanco); }
+        .badge.bg-success { background-color: var(--color-verde) !important; }
+        .badge.bg-primary { background-color: var(--color-azul) !important; }
+        .badge.bg-danger { background-color: var(--color-guinda) !important; }
+        .badge.bg-warning { background-color: var(--color-amarillo) !important; color: var(--color-negro) !important; }
+
+        /* Estilos generales */
+        body {
+            background-color: var(--color-gris-claro);
+            color: var(--color-gris-oscuro);
+        }
+        .navbar {
+            background-color: var(--color-blanco) !important;
+            border-bottom: 3px solid var(--color-guinda);
+        }
+        .navbar-brand {
+            color: var(--color-guinda) !important;
+        }
+        .nav-link.active {
+            color: var(--color-guinda) !important;
+            font-weight: bold;
+            border-bottom: 2px solid var(--color-guinda);
+        }
+        .footer {
+            background-color: var(--color-gris-oscuro);
+            color: var(--color-blanco);
+        }
+        .card-header-custom {
+            background-color: var(--color-blanco);
+            border-bottom: 1px solid #dee2e6;
+        }
+        .table-dark {
+            --bs-table-bg: var(--color-negro);
+            --bs-table-border-color: #495057;
+        }
+        main {
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body class="d-flex flex-column h-100">
+
+    <!-- Barra de Navegación -->
+    <nav class="navbar navbar-expand-lg navbar-light shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="{{ url_for('dashboard') }}">
+                <i class="bi bi-book-half"></i>
+                Biblioteca Izamal
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'libro' in request.endpoint %}active{% endif %}" href="{{ url_for('listar_libros') }}">Libros</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'prestatario' in request.endpoint %}active{% endif %}" href="{{ url_for('listar_prestatarios') }}">Prestatarios</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'prestamo' in request.endpoint %}active{% endif %}" href="{{ url_for('listar_prestamos') }}">Préstamos</a>
+                    </li>
+                     <li class="nav-item">
+                        <a class="nav-link {% if 'anaquel' in request.endpoint %}active{% endif %}" href="{{ url_for('vista_anaqueles') }}">Anaqueles</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if 'reporte' in request.endpoint %}active{% endif %}" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Reportes
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                            <li><a class="dropdown-item" href="{{ url_for('reporte_inventario_total') }}">Reporte de Inventario</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('reporte_libros_prestados') }}">Reporte de Préstamos</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    {% if session.user_name %}
+                        <span class="navbar-text me-3">
+                            Hola, <strong>{{ session.user_name }}</strong>
+                        </span>
+                        <a href="{{ url_for('logout') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <main class="container my-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Pie de Página -->
+    <footer class="footer mt-auto py-3">
+        <div class="container text-center">
+            <span>&copy; {{ year if year else 2025 }} Sistema de Biblioteca - H. Ayuntamiento de Izamal</span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

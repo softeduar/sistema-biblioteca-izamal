@@ -1,0 +1,39 @@
+{% if libros %}
+    {% for libro in libros %}
+    <tr>
+        <td>{{ libro.titulo }}</td>
+        <td>{{ libro.autor }}</td>
+        <td>{{ libro.genero }}</td>
+        <td class="text-center">{{ libro.total_ejemplares }}</td>
+        <td class="text-center">
+            {% if libro.ejemplares_disponibles > 0 %}
+                <span class="badge bg-success">{{ libro.ejemplares_disponibles }}</span>
+            {% else %}
+                <span class="badge bg-warning">{{ libro.ejemplares_disponibles }}</span>
+            {% endif %}
+        </td>
+        <td class="text-center">
+            <a href="{{ url_for('detalle_libro', id_libro=libro.id) }}" class="btn btn-sm btn-info text-white" title="Ver Detalles">
+                <i class="bi bi-eye-fill"></i>
+            </a>
+            <a href="{{ url_for('editar_libro', id_libro=libro.id) }}" class="btn btn-sm btn-secondary" title="Editar">
+                <i class="bi bi-pencil-square"></i>
+            </a>
+            <button type="button" class="btn btn-sm btn-danger" title="Eliminar"
+                    data-bs-toggle="modal" data-bs-target="#confirmDeleteModal"
+                    data-bs-form-action="{{ url_for('eliminar_libro', id_libro=libro.id) }}"
+                    data-bs-libro-titulo="{{ libro.titulo }}">
+                <i class="bi bi-trash-fill"></i>
+            </button>
+        </td>
+    </tr>   
+    {% endfor %}
+{% else %}
+    <tr>
+        <td colspan="6">
+            <div class="alert alert-info text-center mb-0">
+                No se encontraron libros que coincidan con la búsqueda.
+            </div>
+        </td>
+    </tr>
+{% endif %}

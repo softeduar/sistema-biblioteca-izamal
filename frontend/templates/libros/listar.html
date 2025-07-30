@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Catálogo de Libros{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header card-header-custom">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h1 class="h3 mb-2 mb-md-0 text-dark">Catálogo de Libros</h1>
+            <a href="{{ url_for('agregar_libro') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle-fill me-2"></i>Registrar Nuevo Libro
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Barra de Búsqueda -->
+        <div class="mb-4">
+            <form action="{{ url_for('listar_libros') }}" method="GET" id="searchForm">
+                <div class="input-group">
+                    <input type="text" id="searchInput" name="q" class="form-control" placeholder="Buscar por título, autor o género..." value="{{ busqueda if busqueda else '' }}">
+                    <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tabla de Libros -->
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">Título</th>
+                        <th scope="col">Autor</th>
+                        <th scope="col">Género</th>
+                        <th scope="col" class="text-center">Total</th>
+                        <th scope="col" class="text-center">Disponibles</th>
+                        <th scope="col" class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-libros-body">
+                    {% include 'libros/tabla_libros_partial.html' %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación de Eliminación-->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que deseas eliminar el libro "<strong id="libroTituloModal"></strong>"?<br>
+                <small class="text-danger">Esta acción no se puede deshacer.</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteForm" action="" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Script para el modal de eliminación
+    const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+    if(confirmDeleteModal) {
+        confirmDeleteModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const formAction = button.getAttribute('data-bs-form-action');
+            const libroTitulo = button.getAttribute('data-bs-libro-titulo');
+            const modalTitleElement = confirmDeleteModal.querySelector('#libroTituloModal');
+            const deleteForm = confirmDeleteModal.querySelector('#deleteForm');
+            modalTitleElement.textContent = libroTitulo;
+            deleteForm.action = formAction;
+        });
+    }
+
+    // Script para Búsqueda Dinámica
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const tableBody = document.getElementById('tabla-libros-body');
+        const searchForm = document.getElementById('searchForm');
+        let debounceTimer;
+
+        // Evitar que el formulario se envíe al presionar Enter en el input
+        searchInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+            }
+        });
+
+        searchInput.addEventListener('input', function() {
+            const query = searchInput.value;
+
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Cargando...</span></div> Cargando...</td></tr>';
+                
+                const searchURL = `{{ url_for('listar_libros') }}?q=${encodeURIComponent(query)}`;
+
+                fetch(searchURL, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    tableBody.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error en la búsqueda:', error);
+                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al cargar los resultados.</td></tr>';
+                });
+            }, 350);
+        });
+    });
+</script>
+{% endblock %}

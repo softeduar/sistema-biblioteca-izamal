@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Reporte de Inventario Total{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header card-header-custom">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h1 class="h3 mb-2 mb-md-0 text-dark">Reporte de Inventario de Libros</h1>
+            <a href="{{ url_for('generar_pdf_inventario') }}" class="btn btn-danger">
+                <i class="bi bi-file-earmark-pdf-fill me-2"></i>Descargar en PDF
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if sumario %}
+        <div class="mb-5">
+            <h2 class="h4 mb-3">Resumen General</h2>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="card text-center border-primary border-2" style="--bs-border-color: var(--color-guinda);">
+                        <div class="card-body">
+                            <h5 class="card-title text-uppercase fs-6" style="color: var(--color-guinda);"><i class="bi bi-journal-richtext me-2"></i>Títulos Únicos</h5>
+                            <p class="card-text fs-2 fw-bold text-dark">{{ sumario.total_titulos if sumario.total_titulos is not none else 0 }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center border-success border-2" style="--bs-border-color: var(--color-verde);">
+                        <div class="card-body">
+                            <h5 class="card-title text-uppercase fs-6" style="color: var(--color-verde);"><i class="bi bi-stack me-2"></i>Total de Ejemplares</h5>
+                            <p class="card-text fs-2 fw-bold text-dark">{{ sumario.sum_total_ejemplares if sumario.sum_total_ejemplares is not none else 0 }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center border-info border-2" style="--bs-border-color: var(--color-azul);">
+                        <div class="card-body">
+                            <h5 class="card-title text-uppercase fs-6" style="color: var(--color-azul);"><i class="bi bi-check-circle me-2"></i>Ejemplares Disponibles</h5>
+                            <p class="card-text fs-2 fw-bold text-dark">{{ sumario.sum_ejemplares_disponibles if sumario.sum_ejemplares_disponibles is not none else 0 }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if detalle_libros %}
+        <h2 class="h4 mb-3">Detalle del Inventario</h2>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">Título</th>
+                        <th scope="col">Autor</th>
+                        <th scope="col" class="text-center">Total Ejemplares</th>
+                        <th scope="col" class="text-center">Disponibles</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for libro in detalle_libros %}
+                    <tr>
+                        <td>{{ libro.titulo }}</td>
+                        <td>{{ libro.autor }}</td>
+                        <td class="text-center">{{ libro.total_ejemplares }}</td>
+                        <td class="text-center">
+                            {% if libro.ejemplares_disponibles > 0 %}
+                                <span class="badge bg-success">{{ libro.ejemplares_disponibles }}</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">{{ libro.ejemplares_disponibles }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center">
+            No hay libros registrados para mostrar en el inventario.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

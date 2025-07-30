@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-dark">Resumen General</h1>
+    </div>
+
+    <!-- Fila de Tarjetas con Estadísticas -->
+    <div class="row">
+        <!-- Tarjeta: Total de Libros -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-primary border-4 shadow h-100 py-2" style="--bs-border-color: var(--color-guinda);">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs fw-bold text-uppercase mb-1" style="color: var(--color-guinda);">Total de Libros</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">{{ stats.total_libros if stats.total_libros is not none else 0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-book-half fs-2 text-black-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta: Préstamos Activos -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-success border-4 shadow h-100 py-2" style="--bs-border-color: var(--color-verde);">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs fw-bold text-uppercase mb-1" style="color: var(--color-verde);">Préstamos Activos</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">{{ stats.prestamos_activos if stats.prestamos_activos is not none else 0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-arrow-right-square-fill fs-2 text-black-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta: Libros por Vencer -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-warning border-4 shadow h-100 py-2" style="--bs-border-color: var(--color-amarillo);">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs fw-bold text-uppercase mb-1" style="color: var(--color-amarillo);">Próximos a Vencer (3 días)</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">{{ stats.por_vencer_conteo if stats.por_vencer_conteo is not none else 0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-alarm-fill fs-2 text-black-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta: Total de Prestatarios -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-info border-4 shadow h-100 py-2" style="--bs-border-color: var(--color-azul);">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs fw-bold text-uppercase mb-1" style="color: var(--color-azul);">Total de Prestatarios</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">{{ stats.total_prestatarios if stats.total_prestatarios is not none else 0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-people-fill fs-2 text-black-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fila con la lista de libros por vencer -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 fw-bold text-primary">Préstamos Próximos a Vencer</h6>
+                </div>
+                <div class="card-body">
+                    {% if libros_por_vencer %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Libro</th>
+                                        <th>Prestatario</th>
+                                        <th class="text-center">Fecha de Devolución</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for libro in libros_por_vencer %}
+                                    <tr class="table-warning">
+                                        <td>{{ libro.titulo }}</td>
+                                        <td>{{ libro.nombre_prestatario }}</td>
+                                        <td class="text-center">{{ libro.fecha_devolucion_prevista.strftime('%d/%m/%Y') }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-light text-center mb-0">
+                            No hay préstamos con vencimiento en los próximos 3 días.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Préstamos{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header card-header-custom">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h1 class="h3 mb-2 mb-md-0 text-dark">Historial de Préstamos</h1>
+            <a href="{{ url_for('registrar_prestamo') }}" class="btn btn-primary">
+                <i class="bi bi-journal-plus me-2"></i>Registrar Nuevo Préstamo
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="mb-4">
+            <form action="{{ url_for('listar_prestamos') }}" method="GET">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control" placeholder="Buscar por título de libro o nombre de prestatario..." value="{{ busqueda if busqueda else '' }}">
+                    <button class="btn btn-outline-secondary" type="submit">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">Libro</th>
+                        <th scope="col">Prestatario</th>
+                        <th scope="col" class="text-center">Fecha Préstamo</th>
+                        <th scope="col" class="text-center">Devolución Prevista</th>
+                        <th scope="col" class="text-center">Devolución Real</th>
+                        <th scope="col" class="text-center">Estado</th>
+                        <th scope="col" class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if prestamos %}
+                        {% for p in prestamos %}
+                            {% set vencido = p.estado == 'prestado' and p.fecha_devolucion_prevista < today_date %}
+                            <tr class="{% if vencido or p.estado == 'vencido' %}table-danger{% endif %}">
+                                <td>{{ p.libro_titulo }}</td>
+                                <td>{{ p.nombre_prestatario }}</td>
+                                <td class="text-center">{{ p.fecha_prestamo.strftime('%d/%m/%Y') if p.fecha_prestamo else '' }}</td>
+                                <td class="text-center">{{ p.fecha_devolucion_prevista.strftime('%d/%m/%Y') if p.fecha_devolucion_prevista else '' }}</td>
+                                <td class="text-center">{{ p.fecha_devolucion_real.strftime('%d/%m/%Y') if p.fecha_devolucion_real else 'N/A' }}</td>
+                                <td class="text-center">
+                                    <span class="badge rounded-pill 
+                                        {% if p.estado == 'devuelto' %} bg-success
+                                        {% elif vencido or p.estado == 'vencido' %} bg-danger
+                                        {% else %} bg-primary
+                                        {% endif %}">
+                                        {{ 'Vencido' if vencido and p.estado == 'prestado' else p.estado|capitalize }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    {% if p.estado == 'prestado' or vencido or p.estado == 'vencido' %}
+                                    <form action="{{ url_for('registrar_devolucion', id_prestamo=p.id) }}" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-success" title="Marcar como Devuelto">
+                                            <i class="bi bi-check2-circle"></i> Devolver
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <span>-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7">
+                                <div class="alert alert-info text-center mb-0">
+                                    {% if busqueda %}
+                                        No se encontraron préstamos que coincidan con: "{{ busqueda }}".
+                                    {% else %}
+                                        No hay préstamos registrados en el sistema.
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

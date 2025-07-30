@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Listado de Prestatarios{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header card-header-custom">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h1 class="h3 mb-2 mb-md-0 text-dark">Registro de Prestatarios</h1>
+            <a href="{{ url_for('agregar_prestatario') }}" class="btn btn-primary">
+                <i class="bi bi-person-plus-fill me-2"></i>Registrar Nuevo Prestatario
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col" style="width: 10%;">Identificación</th>
+                        <th scope="col">Nombre</th>
+                        <th scope="col">Correo Electrónico</th>
+                        <th scope="col">Teléfono</th>
+                        <th scope="col" class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if prestatarios %}
+                        {% for p in prestatarios %}
+                        <tr>
+                            <td>
+                                {% if p.ruta_identificacion %}
+                                    <a href="{{ url_for('serve_upload', filename=p.ruta_identificacion) }}" target="_blank" title="Ver identificación de {{ p.nombre }}">
+                                        <img src="{{ url_for('serve_upload', filename=p.ruta_identificacion) }}" alt="ID de {{ p.nombre }}" class="img-fluid rounded" style="max-width: 60px; height: auto;">
+                                    </a>
+                                {% else %}
+                                    <div class="text-center text-muted">
+                                        <i class="bi bi-person-bounding-box" style="font-size: 2rem;" title="Sin imagen"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('detalle_prestatario', id_prestatario=p.id) }}" class="text-decoration-none fw-bold" style="color: var(--color-azul);">
+                                    {{ p.nombre }}
+                                </a>
+                            </td>
+                            <td>{{ p.correo_electronico if p.correo_electronico else 'N/A' }}</td>
+                            <td>{{ p.telefono if p.telefono else 'N/A' }}</td>
+                            <td class="text-center">
+                                <a href="{{ url_for('editar_prestatario', id_prestatario=p.id) }}" class="btn btn-sm btn-secondary" title="Editar">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-danger" title="Eliminar"
+                                        data-bs-toggle="modal" data-bs-target="#confirmDeleteModal"
+                                        data-bs-form-action="{{ url_for('eliminar_prestatario', id_prestatario=p.id) }}"
+                                        data-bs-prestatario-nombre="{{ p.nombre }}">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5">
+                                <div class="alert alert-info text-center mb-0">No hay prestatarios registrados.</div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación de Eliminación -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que deseas eliminar a <strong id="prestatarioNombreModal"></strong>?<br>
+                <small class="text-danger">No será posible si tiene préstamos asociados.</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteForm" action="" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+    if (confirmDeleteModal) {
+        confirmDeleteModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const formAction = button.getAttribute('data-bs-form-action');
+            const prestatarioNombre = button.getAttribute('data-bs-prestatario-nombre');
+            const modalNombreElement = confirmDeleteModal.querySelector('#prestatarioNombreModal');
+            const deleteForm = confirmDeleteModal.querySelector('#deleteForm');
+            modalNombreElement.textContent = prestatarioNombre;
+            deleteForm.action = formAction;
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Detalles de {{ prestatario.nombre }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-dark">Perfil del Prestatario</h1>
+    <a href="{{ url_for('listar_prestatarios') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Volver a la lista
+    </a>
+</div>
+<div class="row">
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header card-header-custom text-center">
+                <h5 class="mb-0">Información Personal</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if prestatario.ruta_identificacion %}
+                    <img src="{{ url_for('serve_upload', filename=prestatario.ruta_identificacion) }}" alt="ID de {{ prestatario.nombre }}" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #dee2e6;">
+                {% else %}
+                    <div class="text-center text-muted mb-3">
+                        <i class="bi bi-person-bounding-box" style="font-size: 150px;"></i>
+                    </div>
+                {% endif %}
+                <h4 class="card-title">{{ prestatario.nombre }}</h4>
+                <ul class="list-group list-group-flush text-start mt-4">
+                    <li class="list-group-item">
+                        <i class="bi bi-envelope-fill me-2" style="color: var(--color-azul);"></i>
+                        <strong>Email:</strong> {{ prestatario.correo_electronico if prestatario.correo_electronico else 'No proporcionado' }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-telephone-fill me-2" style="color: var(--color-azul);"></i>
+                        <strong>Teléfono:</strong> {{ prestatario.telefono if prestatario.telefono else 'No proporcionado' }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-calendar-check-fill me-2" style="color: var(--color-azul);"></i>
+                        <strong>Miembro desde:</strong> {{ prestatario.fecha_alta.strftime('%d de %B de %Y') }}
+                    </li>
+                </ul>
+                <a href="{{ url_for('editar_prestatario', id_prestatario=prestatario.id) }}" class="btn btn-primary mt-4 w-100">
+                    <i class="bi bi-pencil-square me-2"></i>Editar Perfil
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="card shadow-sm h-100">
+            <div class="card-header card-header-custom">
+                <h5 class="mb-0">Historial de Préstamos</h5>
+            </div>
+            <div class="card-body">
+                {% if historial %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Libro Prestado</th>
+                                    <th class="text-center">Fecha de Préstamo</th>
+                                    <th class="text-center">Fecha de Devolución</th>
+                                    <th class="text-center">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prestamo in historial %}
+                                    {% set vencido = prestamo.estado == 'prestado' and prestamo.fecha_devolucion_prevista < today_date %}
+                                    <tr class="{% if vencido or prestamo.estado == 'vencido' %}table-danger{% endif %}">
+                                        <td>{{ prestamo.libro_titulo }}</td>
+                                        <td class="text-center">{{ prestamo.fecha_prestamo.strftime('%d/%m/%Y') }}</td>
+                                        <td class="text-center">
+                                            {{ prestamo.fecha_devolucion_real.strftime('%d/%m/%Y') if prestamo.fecha_devolucion_real else prestamo.fecha_devolucion_prevista.strftime('%d/%m/%Y') }}
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge rounded-pill 
+                                                {% if prestamo.estado == 'devuelto' %} bg-success
+                                                {% elif vencido or prestamo.estado == 'vencido' %} bg-danger
+                                                {% else %} bg-primary
+                                                {% endif %}">
+                                                {{ 'Vencido' if vencido and prestamo.estado == 'prestado' else prestamo.estado|capitalize }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-light text-center mb-0">
+                        Este prestatario no tiene ningún préstamo en su historial.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

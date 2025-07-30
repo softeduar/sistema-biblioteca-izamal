@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Nuevo Préstamo{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+        <div class="card shadow-sm">
+            <div class="card-header card-header-custom">
+                <h1 class="h3 mb-0 text-dark">Registrar Nuevo Préstamo</h1>
+            </div>
+            <div class="card-body">
+                {% if not prestatarios %}
+                <div class="alert alert-warning" role="alert">
+                    <h4 class="alert-heading">¡Atención!</h4>
+                    <p>Para registrar un préstamo, es necesario que existan prestatarios registrados.</p>
+                    <hr>
+                    <p class="mb-0"><a href="{{ url_for('agregar_prestatario') }}" class="alert-link">Agregue un nuevo prestatario</a>.</p>
+                </div>
+                {% else %}
+                <form method="POST" action="" id="prestamoForm">
+                    <!-- INICIO DEL CAMPO DE BÚSQUEDA DE LIBROS -->
+                    <div class="mb-3">
+                        <label for="libro_busqueda" class="form-label">Buscar Libro (por Título o Autor)</label>
+                        <div class="position-relative">
+                            <input type="text" class="form-control" id="libro_busqueda" placeholder="Comienza a escribir para buscar..." autocomplete="off">
+                            <!-- Este campo oculto guardará el ID del libro seleccionado -->
+                            <input type="hidden" id="libro_id" name="libro_id" required>
+                            <!-- Este div mostrará los resultados de la búsqueda -->
+                            <div id="resultados_busqueda" class="list-group position-absolute w-100" style="z-index: 1000;"></div>
+                        </div>
+                        <div id="libro_error" class="text-danger mt-1 d-none">Debes seleccionar un libro de la lista.</div>
+                    </div>
+                    <!-- FIN DEL CAMPO DE BÚSQUEDA DE LIBROS -->
+
+                    <div class="mb-4">
+                        <label for="prestatario_id" class="form-label">Prestatario</label>
+                        <select class="form-select" id="prestatario_id" name="prestatario_id" required>
+                            <option value="" selected disabled>-- Seleccione un prestatario --</option>
+                            {% for prestatario in prestatarios %}
+                                <option value="{{ prestatario.id }}">{{ prestatario.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="alert alert-info" role="alert">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        La devolución prevista será en 15 días. Máximo 3 préstamos por persona.
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-end">
+                        <a href="{{ url_for('listar_prestamos') }}" class="btn btn-secondary me-2">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">Registrar Préstamo</button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('libro_busqueda');
+    const hiddenInput = document.getElementById('libro_id');
+    const resultsContainer = document.getElementById('resultados_busqueda');
+    const form = document.getElementById('prestamoForm');
+    const libroError = document.getElementById('libro_error');
+
+    let debounceTimer;
+
+    searchInput.addEventListener('input', function() {
+        const query = searchInput.value;
+        hiddenInput.value = '';
+
+        clearTimeout(debounceTimer);
+        if (query.length < 2) {
+            resultsContainer.innerHTML = '';
+            return;
+        }
+
+        debounceTimer = setTimeout(() => {
+            fetch(`{{ url_for('api_buscar_libros') }}?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    resultsContainer.innerHTML = '';
+                    if (data.length > 0) {
+                        data.forEach(libro => {
+                            const item = document.createElement('a');
+                            item.href = '#';
+                            item.classList.add('list-group-item', 'list-group-item-action');
+                            item.innerHTML = `<strong>${libro.titulo}</strong><br><small class="text-muted">${libro.autor}</small>`;
+                            item.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                searchInput.value = libro.titulo;
+                                hiddenInput.value = libro.id;
+                                resultsContainer.innerHTML = '';
+                                libroError.classList.add('d-none');
+                            });
+                            resultsContainer.appendChild(item);
+                        });
+                    } else {
+                        const noResult = document.createElement('span');
+                        noResult.classList.add('list-group-item', 'disabled');
+                        noResult.textContent = 'No se encontraron libros disponibles.';
+                        resultsContainer.appendChild(noResult);
+                    }
+                });
+        }, 300); // Espera 300ms después de que el usuario deja de teclear
+    });
+
+    // Ocultar resultados si se hace clic fuera
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target)) {
+            resultsContainer.innerHTML = '';
+        }
+    });
+
+    // Validar que se haya seleccionado un libro antes de enviar
+    form.addEventListener('submit', function(e) {
+        if (!hiddenInput.value) {
+            e.preventDefault(); // Detener el envío del formulario
+            libroError.classList.remove('d-none');
+            searchInput.focus();
+        } else {
+            libroError.classList.add('d-none');
+        }
+    });
+});
+</script>
+{% endblock %}

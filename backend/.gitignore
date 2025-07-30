@@ -1,0 +1,8 @@
+# Ignorar el entorno virtual de Python
+.venv/
+
+# Ignorar carpetas de caché de Python
+__pycache__/
+
+# Ignorar el archivo que contiene las contraseñas y claves secretas
+.env

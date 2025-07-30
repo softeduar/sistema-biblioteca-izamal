@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Detalles de {{ libro.titulo }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-dark">Ficha del Libro</h1>
+    <a href="{{ url_for('listar_libros') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Volver al Catálogo
+    </a>
+</div>
+<div class="row">
+    <div class="col-lg-5 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header card-header-custom">
+                <h5 class="mb-0">{{ libro.titulo }}</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">{{ libro.autor }}</h6>
+                <ul class="list-group list-group-flush mt-4">
+                    <li class="list-group-item"><strong>Editorial:</strong> {{ libro.editorial if libro.editorial else 'N/A' }}</li>
+                    <li class="list-group-item"><strong>Género:</strong> {{ libro.nombre_genero if libro.nombre_genero else 'N/A' }}</li>
+                    <li class="list-group-item"><strong>ISBN:</strong> {{ libro.isbn if libro.isbn else 'N/A' }}</li>
+                    <li class="list-group-item"><strong>Ubicación:</strong> 
+                        <span class="badge bg-info">{{ libro.nombre_anaquel if libro.nombre_anaquel else 'Sin asignar' }}</span>
+                    </li>
+                    <li class="list-group-item"><strong>Total de Ejemplares:</strong> {{ libro.total_ejemplares }}</li>
+                    <li class="list-group-item"><strong>Ejemplares Disponibles:</strong> {{ libro.ejemplares_disponibles }}</li>
+                </ul>
+                <a href="{{ url_for('editar_libro', id_libro=libro.id) }}" class="btn btn-primary mt-4 w-100">
+                    <i class="bi bi-pencil-square me-2"></i>Editar Información
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card shadow-sm h-100">
+            <div class="card-header card-header-custom">
+                <h5 class="mb-0">Historial de Préstamos de este Libro</h5>
+            </div>
+            <div class="card-body">
+                {% if historial %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Prestado a</th>
+                                    <th class="text-center">Fecha de Préstamo</th>
+                                    <th class="text-center">Fecha de Devolución</th>
+                                    <th class="text-center">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prestamo in historial %}
+                                <tr>
+                                    <td>{{ prestamo.nombre_prestatario }}</td>
+                                    <td class="text-center">{{ prestamo.fecha_prestamo.strftime('%d/%m/%Y') }}</td>
+                                    <td class="text-center">{{ prestamo.fecha_devolucion_real.strftime('%d/%m/%Y') if prestamo.fecha_devolucion_real else 'No devuelto' }}</td>
+                                    <td class="text-center">
+                                        <span class="badge rounded-pill 
+                                            {% if prestamo.estado == 'devuelto' %} bg-success
+                                            {% elif prestamo.estado == 'vencido' %} bg-danger
+                                            {% else %} bg-primary
+                                            {% endif %}">
+                                            {{ prestamo.estado|capitalize }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-light text-center mb-0">
+                        Este libro no tiene ningún préstamo en su historial.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

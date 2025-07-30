@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Vista por Anaqueles{% endblock %}
+
+{% block content %}
+<form action="{{ url_for('generar_pdf_anaqueles') }}" method="POST" target="_blank">
+    <div class="card shadow-sm">
+        <div class="card-header card-header-custom">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <h1 class="h3 mb-2 mb-md-0 text-dark">Vista por Anaqueles</h1>
+                <div>
+                    <button type="button" class="btn btn-info text-white" id="selectAllBtn">Seleccionar Todo</button>
+                    <button type="button" class="btn btn-warning" id="deselectAllBtn">Deseleccionar Todo</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-file-earmark-pdf-fill me-2"></i>Generar PDF de Selección
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="accordion" id="accordionAnaqueles">
+                {% for anaquel in anaqueles %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading-{{ anaquel.id }}">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ anaquel.id }}" aria-expanded="false" aria-controls="collapse-{{ anaquel.id }}">
+                            <input type="checkbox" name="anaquel_id" value="{{ anaquel.id }}" class="form-check-input me-3 anaquel-checkbox">
+                            <strong class="me-2">{{ anaquel.nombre }}</strong> 
+                            <span class="badge rounded-pill" style="background-color: var(--color-gris-oscuro);">{{ libros_por_anaquel[anaquel.id]|length }} libro(s)</span>
+                        </button>
+                    </h2>
+                    <div id="collapse-{{ anaquel.id }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ anaquel.id }}" data-bs-parent="#accordionAnaqueles">
+                        <div class="accordion-body">
+                            {% if libros_por_anaquel[anaquel.id] %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Título</th>
+                                                <th>Autor</th>
+                                                <th>Editorial</th>
+                                                <th class="text-center">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for libro in libros_por_anaquel[anaquel.id] %}
+                                            <tr>
+                                                <td>{{ libro.titulo }}</td>
+                                                <td>{{ libro.autor }}</td>
+                                                <td>{{ libro.editorial if libro.editorial else 'N/A' }}</td>
+                                                <td class="text-center">
+                                                    <a href="{{ url_for('detalle_libro', id_libro=libro.id) }}" class="btn btn-sm btn-outline-info" title="Ver Detalles">
+                                                        <i class="bi bi-eye-fill"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-muted">Este anaquel está vacío.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if libros_sin_anaquel %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading-sin-asignar">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-sin-asignar" aria-expanded="false" aria-controls="collapse-sin-asignar">
+                            <strong class="me-2" style="color: var(--color-guinda);">Libros sin Anaquel Asignado</strong> 
+                            <span class="badge bg-danger rounded-pill">{{ libros_sin_anaquel|length }} libro(s)</span>
+                        </button>
+                    </h2>
+                    <div id="collapse-sin-asignar" class="accordion-collapse collapse" aria-labelledby="heading-sin-asignar" data-bs-parent="#accordionAnaqueles">
+                        <div class="accordion-body">
+                            <p>Los siguientes libros no tienen una ubicación asignada. Se recomienda <a href="{{ url_for('listar_libros') }}">editarlos</a> para asignarles un anaquel.</p>
+                             <div class="table-responsive">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Título</th>
+                                            <th>Autor</th>
+                                            <th>Editorial</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for libro in libros_sin_anaquel %}
+                                        <tr>
+                                            <td>{{ libro.titulo }}</td>
+                                            <td>{{ libro.autor }}</td>
+                                            <td>{{ libro.editorial if libro.editorial else 'N/A' }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkboxes = document.querySelectorAll('.anaquel-checkbox');
+        checkboxes.forEach(function(checkbox) {
+            checkbox.addEventListener('click', function(event) {
+                event.stopPropagation();
+            });
+        });
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        const deselectAllBtn = document.getElementById('deselectAllBtn');
+        if(selectAllBtn) {
+            selectAllBtn.addEventListener('click', function() {
+                checkboxes.forEach(checkbox => checkbox.checked = true);
+            });
+        }
+        if(deselectAllBtn) {
+            deselectAllBtn.addEventListener('click', function() {
+                checkboxes.forEach(checkbox => checkbox.checked = false);
+            });
+        }
+    });
+</script>
+{% endblock %}
